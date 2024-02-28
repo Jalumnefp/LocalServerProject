@@ -1,5 +1,6 @@
 package es.jfp.LocalServerProject.ui.config;
 
+import java.awt.Color;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.util.LinkedList;
@@ -22,6 +23,7 @@ public class StorageConfigPanel extends JPanel {
 	private final JButton storagePathButton = new JButton("Seleccionar directorio");
 	private final JLabel storageResult = new JLabel();
 	private final JLabel storageDescrLabel = new JLabel("<html>Selecciona el directorio donde quieres que opere el servidor</html>");
+	private final JLabel storageFormatErrorLabel = new JLabel("<html>Este campo es obligatorio!</html>");
 	
 	private List<JComponent> gridElements = new LinkedList<>();
 	
@@ -36,6 +38,9 @@ public class StorageConfigPanel extends JPanel {
 		this.gridElements.add(storageDescrLabel);
 		this.gridElements.add(storagePathButton);
 		this.gridElements.add(storageResult);
+		this.gridElements.add(storageFormatErrorLabel);
+		storageFormatErrorLabel.setForeground(Color.RED);
+		storageFormatErrorLabel.setVisible(false);
 
 		
 		GridBagConstraints gridBagConstraints = new GridBagConstraints();
@@ -62,6 +67,10 @@ public class StorageConfigPanel extends JPanel {
 	
 	public String getStoragePath() {
 		return this.storagePath;
+	}
+	
+	public void setStorageErrorLabelVisible(boolean visible) {
+		this.storageFormatErrorLabel.setVisible(visible);
 	}
 
 }

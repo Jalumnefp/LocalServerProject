@@ -1,5 +1,6 @@
 package es.jfp.LocalServerProject.ui.config;
 
+import java.awt.Color;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.util.LinkedList;
@@ -17,6 +18,7 @@ public class LoginConfigPanel extends JPanel {
 	private final JLabel loginDescrLabel = new JLabel(descr);
 	private final JTextField passwordTextField = new JTextField();
 	private final JLabel passwordFieldLabel = new JLabel("<html>Contraseña de inicio de sesión</html>");
+	private final JLabel passwordFormatErrorLabel = new JLabel("<html>La contraseña debe ser de al menos 10 carácteres, los cuales deben contener 1 mayúscula y 1 dígito.</html>");
 	
 	private List<JComponent> gridElements = new LinkedList<>();
 	
@@ -30,6 +32,9 @@ public class LoginConfigPanel extends JPanel {
 				
 		this.gridElements.add(passwordFieldLabel);
 		this.gridElements.add(passwordTextField);
+		this.gridElements.add(passwordFormatErrorLabel);
+		passwordFormatErrorLabel.setVisible(false);
+		passwordFormatErrorLabel.setForeground(Color.RED);
 
 		
 		GridBagConstraints gridBagConstraints = new GridBagConstraints();
@@ -47,6 +52,10 @@ public class LoginConfigPanel extends JPanel {
 	
 	public String getPasswordValue() {
 		return this.passwordTextField.getText();
+	}
+	
+	public void setPasswordFormatErrorVisible(boolean visible) {
+		passwordFormatErrorLabel.setVisible(true);
 	}
 
 }

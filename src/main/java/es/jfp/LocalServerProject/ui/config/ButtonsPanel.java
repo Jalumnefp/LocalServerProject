@@ -39,11 +39,13 @@ public class ButtonsPanel extends JPanel {
 		saveButton.addActionListener(action -> {
 			ConfigFrame parent = (ConfigFrame) SwingUtilities.getAncestorOfClass(ConfigFrame.class, ButtonsPanel.this);
 			String config = parent.getFormatedConfData();
-			fileManager.writeFileBytes(Path.of("config.txt"), config.getBytes());
-			synchronized (ServerSetup.class) {
-				ServerSetup.class.notify();
+			if (config != null) {
+				fileManager.writeFileBytes(Path.of("config.txt"), config.getBytes());
+				synchronized (ServerSetup.class) {
+					ServerSetup.class.notify();
+				}
+				parent.dispose();
 			}
-			parent.dispose();
 		});
 		
 	}

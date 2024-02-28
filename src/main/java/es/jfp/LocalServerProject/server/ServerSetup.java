@@ -40,7 +40,6 @@ public class ServerSetup implements Runnable {
 
 	@Override
 	public void run() {
-		System.out.println("START");
 		boolean configurationSuccessful = configureServer();
 		if (configurationSuccessful) {
 			if (login()) {
@@ -133,7 +132,7 @@ public class ServerSetup implements Runnable {
 	 * Comprueba el formato string obtenido
 	 * */
 	private boolean configFileIsOk(String config) {
-		String regex = "^IPV4=([0-9]{1,3}(\\.[0-9]{1,3}){3})\\nPORT=(\\d{1,5})\\nPASSWORD=([a-zA-Z0-9]+)\\nROOT_DIRECTORY=([\\/\\\\a-zA-Z0-9:]+)$";
+		String regex = "^IPV4=.*\\nPORT=.*\\nPASSWORD=.*\\nROOT_DIRECTORY=.*$";
 		Pattern pattern = Pattern.compile(regex, Pattern.CASE_INSENSITIVE);
 		Matcher matcher = pattern.matcher(config);
 		return matcher.matches();
