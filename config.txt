@@ -1,4 +1,4 @@
-IPV4=127.0.0.1
-PORT=4444
-PASSWORD=Password00
-ROOT_DIRECTORY=C:\Users\magik\Documents
+IPV4=192.168.0.15
+PORT=4545
+PASSWORD=alomomola
+ROOT_DIRECTORY=C:\Users\magik\OneDrive\Escritorio\MAIN

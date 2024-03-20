@@ -1,6 +1,5 @@
 package es.jfp.LocalServerProject.ui.config;
 
-import java.awt.Color;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.util.LinkedList;
@@ -14,16 +13,16 @@ import javax.swing.border.EmptyBorder;
 
 public class NetworkConfigPanel extends JPanel {
 	
+	private String ipv4 = "";
+	private String port = "";
 	
 	private final String descr = "<html>Este apartado está destinado a las configuraciones de la red.</html>";
 	private final JLabel networkDescrLabel = new JLabel(descr);
-	private final JTextField ipv4TextField = new JTextField();
-	private final JTextField portTextField = new JTextField();
+	private final JTextField ipv4TextField = new JTextField(ipv4);
+	private final JTextField portTextField = new JTextField(port);
 	private final JLabel ipv4FieldLabel = new JLabel("<html>Ipv4 del servidor</html>");
 	private final JLabel portFieldLabel = new JLabel("<html>Puerto del servidor</html>");
 	private final JLabel separatorLabel = new JLabel("");
-	private final JLabel ipv4FormatErrorLabel = new JLabel("<html>El formato de la ip es incorrecto. Debe estar compuesta por cuatro digitos menores a 256 y separados por puntos entre si. Por ejemplo 127.0.0.1</html>");
-	private final JLabel portFormatErrorLabel = new JLabel("<html>El formato del puerto es incorrecto. Debe ser un número dentro del rango 0 - 65535.</html>");
 	
 	private List<JComponent> gridElements = new LinkedList<>();
 	
@@ -38,16 +37,11 @@ public class NetworkConfigPanel extends JPanel {
 				
 		this.gridElements.add(ipv4FieldLabel);
 		this.gridElements.add(ipv4TextField);
-		this.gridElements.add(ipv4FormatErrorLabel);
-		ipv4FormatErrorLabel.setForeground(Color.RED);
-		ipv4FormatErrorLabel.setVisible(false);
 		this.gridElements.add(separatorLabel);
 		
 		this.gridElements.add(portFieldLabel);
 		this.gridElements.add(portTextField);
-		this.gridElements.add(portFormatErrorLabel);
-		portFormatErrorLabel.setForeground(Color.RED);
-		portFormatErrorLabel.setVisible(false);
+
 		
 		GridBagConstraints gridBagConstraints = new GridBagConstraints();
 		
@@ -68,14 +62,6 @@ public class NetworkConfigPanel extends JPanel {
 	
 	public String getPortValue() {
 		return portTextField.getText();
-	}
-	
-	public void setIpv4FormatErrorVisible(boolean visible) {
-		ipv4FormatErrorLabel.setVisible(visible);
-	}
-	
-	public void setPortFormatErrorVisible(boolean visible) {
-		portFormatErrorLabel.setVisible(visible);
 	}
 	
 }

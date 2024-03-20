@@ -61,7 +61,7 @@ public class ConfigFrame extends JFrame {
 		
 		setTitle("Configuration Window");
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		setBounds(100, 100, 650, 400);
+		setBounds(100, 100, 450, 300);
 		setContentPane(contentPane);
 		
 		setUpContentPanel();
