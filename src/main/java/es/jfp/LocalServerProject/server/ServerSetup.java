@@ -40,7 +40,6 @@ public class ServerSetup implements Runnable {
 
 	@Override
 	public void run() {
-		System.out.println("START");
 		boolean configurationSuccessful = configureServer();
 		if (configurationSuccessful) {
 			if (login()) {

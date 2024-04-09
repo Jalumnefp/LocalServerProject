@@ -3,6 +3,7 @@ package es.jfp.LocalServerProject.server;
 import java.io.BufferedWriter;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.DataInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -30,16 +31,18 @@ public final class FileManager {
 	
 	private File rootDirectory;
 	
+	private long fileId = 0;
 	
-	private FileManager(File currentDirectory) {
-		this.rootDirectory = currentDirectory;
+	
+	private FileManager(File rootDirectory) {
+		this.rootDirectory = rootDirectory;
 	}
 	
 	
-	public static FileManager getInstance(File currentDirectory) {
+	public static FileManager getInstance(File rootDirectory) {
 		synchronized (FileManager.class) {
 			if (instance==null) {
-				instance = new FileManager(currentDirectory);
+				instance = new FileManager(rootDirectory);
 			}
 			return instance;
 		}
@@ -49,10 +52,10 @@ public final class FileManager {
 		
 		try {
 			ObjectOutputStream oos = new ObjectOutputStream(socketOutputStream);
-			Map<String, List<String[]>> directoryTree = mapDirectory(rootDirectory, 0);
+			Map<String, List<String[]>> directoryTree = mapDirectory(rootDirectory, 0, rootDirectory.getName());
 			oos.writeObject(directoryTree);
 			oos.flush();
-			socketInputStream.read();
+			System.out.println("Mapa de directorios enviado.");
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -61,7 +64,7 @@ public final class FileManager {
 	}
 
 
-	private Map<String, List<String[]>> mapDirectory(File file, int level) {
+	private Map<String, List<String[]>> mapDirectory(File file, int level, String parent) {
 		Map<String, List<String[]>> tree = new HashMap<>();
 		if (level==0) {
 			List<String[]> rootList = new LinkedList<>();
@@ -70,14 +73,13 @@ public final class FileManager {
 		}
         try (DirectoryStream<Path> ds = Files.newDirectoryStream(file.toPath())) {
         	for (Path p: ds) {
-                String parent = p.getParent().toFile().getName();
-                String child = file.toPath().relativize(p).toString();
+                String child = file.toPath().relativize(p).toString() + '?' + fileId++;
                 if (!tree.containsKey(parent)) {
                     tree.put(parent, new LinkedList<>());
                 }
                 tree.get(parent).add(new String[] { child, (p.toFile().isDirectory() ? ("d") : "f")});
                 if(p.toFile().isDirectory()) {
-                    tree.putAll(mapDirectory(p.toFile(), level + 1));
+                    tree.putAll(mapDirectory(p.toFile(), level + 1, child));
                 }
             }
         } catch (IOException e) {
@@ -97,7 +99,9 @@ public final class FileManager {
 	
 	public synchronized void createFolder(InputStream socketInputStream) {
 		try {
-			Path folderPaht = Path.of(getStringHeader(socketInputStream));
+			DataInputStream dis = new DataInputStream(socketInputStream);
+			Path folderPaht = Path.of(rootDirectory + File.separator + dis.readUTF());
+			System.out.println("Creando nueva carpeta: " + rootDirectory + folderPaht);
 		    Files.createDirectory(folderPaht);
 		} catch (IOException e) {
 			// TODO: handle exception
@@ -123,6 +127,9 @@ public final class FileManager {
 		}
 	}
 	
+	/**
+	 * Obtiene el archivo enviado por el cliente y lo guarda
+	 * */
 	public synchronized void uploadFile(InputStream socketInputStream) {
 		try (OutputStream os = Files.newOutputStream(Path.of(rootDirectory.getAbsolutePath() + File.separator + getStringHeader(socketInputStream)),
 				StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.WRITE)) {
@@ -150,9 +157,9 @@ public final class FileManager {
 	
 	// Lee el tamaño de un archivo y luego su nombre
 	private String getStringHeader(InputStream socketInputStream) throws IOException {
-		int stringLength = socketInputStream.read(); System.out.println(stringLength);
+		int stringLength = socketInputStream.read();
 		byte[] buffer = new byte[stringLength];
-		int stringBytes = socketInputStream.read(buffer); System.out.println(new String(buffer, 0, stringBytes, StandardCharsets.UTF_8));
+		int stringBytes = socketInputStream.read(buffer);
 	    return new String(buffer, 0, stringBytes, StandardCharsets.UTF_8);
 	}
 

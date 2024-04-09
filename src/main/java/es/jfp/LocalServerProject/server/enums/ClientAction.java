@@ -1,6 +1,6 @@
 package es.jfp.LocalServerProject.server.enums;
 
-public enum ClientActions {
+public enum ClientAction {
 	READ_DIRECTORY, 
 	UPDATE_CURRENT_DIRECTORY, // DELETE
 	CREATE_FOLDER, 
