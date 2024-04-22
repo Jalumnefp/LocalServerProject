@@ -16,6 +16,8 @@ public class ServerSession implements Runnable {
 	private Socket clientSocket;
 	private File rootPath;
 	private final FileManager fileManager;
+	private final UserAuthenticator userAuth;
+	private String user;
 	
 	private InputStream is;
 	private OutputStream os;
@@ -24,6 +26,7 @@ public class ServerSession implements Runnable {
 		this.clientSocket = socket;
 		this.rootPath = rootPath;
 		this.fileManager = FileManager.getInstance(rootPath);
+		this.userAuth = UserAuthenticator.getInstance();
 		try {
 			this.is = clientSocket.getInputStream();
 			this.os = clientSocket.getOutputStream();
@@ -51,15 +54,36 @@ public class ServerSession implements Runnable {
 	
 	private void doClientAction(ClientAction action) {
 		switch (action) {
-		case READ_DIRECTORY: fileManager.getDirectoryMap(is, os); break;
-		case CREATE_FOLDER: fileManager.createFolder(is); break;
-		case UPLOAD_FILE: fileManager.uploadFile(is); break;
+		case READ_DIRECTORY: fileManager.getDirectoryMap(is, os); 
+			break;
+		case CREATE_FOLDER: fileManager.createFolder(is); 
+			break;
+		case UPLOAD_FILE: fileManager.uploadFile(is); 
+			break;
+		case DELETE_FILE:
+			break;
+		case DELETE_FOLDER:
+			break;
+		case DOWNLOAD_FILE:
+			break;
+		case LOGIN: this.user = userAuth.loginUser(is, os);
+			break;
+		case LOGOFF:
+			break;
+		case REGISTER: this.user = userAuth.registerUser(is, os);
+			break;
+		case UPDATE_FILE:
+			break;
+		case UPDATE_FOLDER:
+			break;
+		case USER_EXISTS:
+			break;
 		}
 	}
 	
 	private ClientAction getClientAction() throws IOException {
-		int mainByte = is.read();
-		ClientAction action = ClientAction.values()[mainByte];
+		int code = is.read();
+		ClientAction action = ClientAction.getByCode(code);
 		System.out.printf("El client %s vol fer %s%n", clientSocket, action);
 		return action;
 	}

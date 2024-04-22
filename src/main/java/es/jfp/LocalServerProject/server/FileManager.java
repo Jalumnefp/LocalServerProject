@@ -48,7 +48,7 @@ public final class FileManager {
 		}
 	}
 
-	public synchronized void getDirectoryMap(InputStream socketInputStream, OutputStream socketOutputStream) {
+	public void getDirectoryMap(InputStream socketInputStream, OutputStream socketOutputStream) {
 		
 		try {
 			ObjectOutputStream oos = new ObjectOutputStream(socketOutputStream);
@@ -88,7 +88,7 @@ public final class FileManager {
         return tree;
 	}
 	
-	public synchronized void updateCurrentDirectory(InputStream socketInputStream) {
+	public void updateCurrentDirectory(InputStream socketInputStream) {
 		try {
 			Path newCurrentPath = Path.of(getStringHeader(socketInputStream));
 			this.rootDirectory = newCurrentPath.toFile();
@@ -97,7 +97,7 @@ public final class FileManager {
 		}
 	}
 	
-	public synchronized void createFolder(InputStream socketInputStream) {
+	public void createFolder(InputStream socketInputStream) {
 		try {
 			DataInputStream dis = new DataInputStream(socketInputStream);
 			Path folderPaht = Path.of(rootDirectory + File.separator + dis.readUTF());
@@ -109,11 +109,11 @@ public final class FileManager {
 		}
 	}
 	
-	public synchronized void deleteFolder() {
+	public void deleteFolder() {
 		// EN CASO DE QUE EL DIRECTORIO TENGA HIJOS PREGUNTAR
 	}
 	
-	public synchronized void downloadFile(OutputStream socketOutputStream) {
+	public void downloadFile(OutputStream socketOutputStream) {
 		try (InputStream is = Files.newInputStream(Path.of(rootDirectory.getAbsolutePath()), StandardOpenOption.READ)) {
 			
 			byte[] buffer = new byte[2048];
@@ -130,7 +130,7 @@ public final class FileManager {
 	/**
 	 * Obtiene el archivo enviado por el cliente y lo guarda
 	 * */
-	public synchronized void uploadFile(InputStream socketInputStream) {
+	public void uploadFile(InputStream socketInputStream) {
 		try (OutputStream os = Files.newOutputStream(Path.of(rootDirectory.getAbsolutePath() + File.separator + getStringHeader(socketInputStream)),
 				StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.WRITE)) {
 			System.out.println("Start upload");
@@ -145,7 +145,7 @@ public final class FileManager {
 		}
 	}
 	
-	public synchronized void deleteFile(InputStream sockInputStream) {
+	public void deleteFile(InputStream sockInputStream) {
 		try {
 			Path filePath = Path.of(getStringHeader(sockInputStream));
 			Files.delete(filePath);
