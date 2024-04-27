@@ -8,10 +8,12 @@ import java.io.OutputStream;
 import java.net.Socket;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import org.apache.log4j.Logger;
 
 import es.jfp.LocalServerProject.server.enums.ClientAction;
 
 public class ServerSession implements Runnable {
+	
 	
 	private Socket clientSocket;
 	private File rootPath;
@@ -41,7 +43,6 @@ public class ServerSession implements Runnable {
 		
 		while(true) {
 			try {
-				System.out.println("Esperant petició ...");
 				ClientAction action = getClientAction();
 				doClientAction(action);
 			} catch (IOException e) {
@@ -60,11 +61,11 @@ public class ServerSession implements Runnable {
 			break;
 		case UPLOAD_FILE: fileManager.uploadFile(is); 
 			break;
-		case DELETE_FILE:
+		case DELETE_FILE: fileManager.deleteFile(is);
 			break;
 		case DELETE_FOLDER:
 			break;
-		case DOWNLOAD_FILE:
+		case DOWNLOAD_FILE: fileManager.downloadFile(is, os);
 			break;
 		case LOGIN: this.user = userAuth.loginUser(is, os);
 			break;
@@ -83,6 +84,7 @@ public class ServerSession implements Runnable {
 	
 	private ClientAction getClientAction() throws IOException {
 		int code = is.read();
+		System.out.println(code);
 		ClientAction action = ClientAction.getByCode(code);
 		System.out.printf("El client %s vol fer %s%n", clientSocket, action);
 		return action;

@@ -101,7 +101,7 @@ public final class FileManager {
 		try {
 			DataInputStream dis = new DataInputStream(socketInputStream);
 			Path folderPaht = Path.of(rootDirectory + File.separator + dis.readUTF());
-			System.out.println("Creando nueva carpeta: " + rootDirectory + folderPaht);
+			System.out.println("Creando nueva carpeta: " + folderPaht);
 		    Files.createDirectory(folderPaht);
 		} catch (IOException e) {
 			// TODO: handle exception
@@ -113,14 +113,17 @@ public final class FileManager {
 		// EN CASO DE QUE EL DIRECTORIO TENGA HIJOS PREGUNTAR
 	}
 	
-	public void downloadFile(OutputStream socketOutputStream) {
-		try (InputStream is = Files.newInputStream(Path.of(rootDirectory.getAbsolutePath()), StandardOpenOption.READ)) {
-			
+	public void downloadFile(InputStream socketInputStream, OutputStream socketOutputStream) {
+		try (InputStream is = Files.newInputStream(Path.of(rootDirectory.getAbsolutePath() + File.separator + getStringHeader(socketInputStream)), 
+				StandardOpenOption.READ)) {
+			System.out.println("Start download");
 			byte[] buffer = new byte[2048];
 			int bytes;
 			while ((bytes=is.read(buffer))!=-1) {
 				socketOutputStream.write(buffer, 0, bytes);
+				socketOutputStream.flush();
 			}
+			socketOutputStream.write(-1);
 			socketOutputStream.flush();
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -147,8 +150,10 @@ public final class FileManager {
 	
 	public void deleteFile(InputStream sockInputStream) {
 		try {
-			Path filePath = Path.of(getStringHeader(sockInputStream));
-			Files.delete(filePath);
+			DataInputStream dis = new DataInputStream(sockInputStream);
+			Path filePath = Path.of(rootDirectory + File.separator + dis.readUTF());
+			System.out.println("Eliminando archivo: " + filePath);
+		    Files.deleteIfExists(filePath);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

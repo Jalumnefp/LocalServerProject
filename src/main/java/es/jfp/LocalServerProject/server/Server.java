@@ -13,11 +13,12 @@ import java.sql.Statement;
 
 import javax.swing.SwingUtilities;
 
+import org.apache.log4j.Logger;
+
 import es.jfp.LocalServerProject.ui.server.ServerFrame;
 
-public class Server implements Runnable {             // QUITAR RUNNABLE A SERVER
-													  // AÑADIR FUNCIONALIDADES DE ACTUALIZAR DIRECTORIOS A TIEMPO REAL
-													  // 
+public class Server implements Runnable {
+														  
 	
 	private boolean nogui;
 	
@@ -37,29 +38,12 @@ public class Server implements Runnable {             // QUITAR RUNNABLE A SERVE
 
 		System.out.println("Server start!");
 		
-		/*try (Connection connection = DriverManager.getConnection("jdbc:sqlite:files/db/database.db");
-				Statement stmt = connection.createStatement()) {
-
-			ResultSet rs = stmt.executeQuery("select * from users");
-	          while(rs.next())
-	          {
-	            // read the result set
-	        	  System.out.println("id = " + rs.getInt("id"));
-	            System.out.println("name = " + rs.getString("username"));
-	            System.out.println("password = " + rs.getString("password"));
-	          }
-	          rs.close();
-
-			
-		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}*/
 		
 		if (!nogui) {
 			SwingUtilities.invokeLater(() -> {
 				new ServerFrame();
 			});
+		} else {
 		}
 		
 		startListening();
