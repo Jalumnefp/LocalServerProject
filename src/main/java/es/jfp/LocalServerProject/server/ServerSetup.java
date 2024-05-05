@@ -40,11 +40,17 @@ public class ServerSetup implements Runnable {
 
 	@Override
 	public void run() {
+		System.out.printf("[%s] Configurando servidor\n", Thread.currentThread().getName());
 		boolean configurationSuccessful = configureServer();
 		if (configurationSuccessful) {
 			if (login()) {
-				new Thread(new Server(this.nogui, this.ipv4, this.port, this.rootStorage)).start();
+				Server server = new Server(this.nogui, this.ipv4, this.port, this.rootStorage);
+				Thread serverThread = new Thread(server, "Server");
+				serverThread.start();
 			}
+		} else {
+			System.err.printf("[%s] Configuracion fallida\n", Thread.currentThread().getName());
+
 		}
 	}
 	
@@ -66,7 +72,7 @@ public class ServerSetup implements Runnable {
 					configCLI.start();
 				} else {
 					setupConfigurationGui();
-				}	
+				}
 			}
 		}
 		return successful;

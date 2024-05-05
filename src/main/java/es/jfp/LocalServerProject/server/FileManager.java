@@ -1,41 +1,45 @@
 package es.jfp.LocalServerProject.server;
 
-import java.io.BufferedWriter;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
-import java.io.OutputStreamWriter;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.DirectoryStream;
+import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
-import java.util.ArrayList;
-import java.util.Arrays;
+import java.nio.file.WatchService;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.TreeMap;
 
-import javax.swing.tree.TreeNode;
+import static java.nio.file.StandardWatchEventKinds.ENTRY_CREATE;
+import static java.nio.file.StandardWatchEventKinds.ENTRY_DELETE;
 
 public final class FileManager {
 	
 	private static FileManager instance;
 	
 	private File rootDirectory;
-	
+	public WatchService watchService;
+	public Map<String, List<String[]>> directoryMap;
 	private long fileId = 0;
 	
 	
 	private FileManager(File rootDirectory) {
 		this.rootDirectory = rootDirectory;
+		this.directoryMap = new HashMap<>();
+		try {
+			this.watchService = FileSystems.getDefault().newWatchService();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 	
 	
@@ -48,12 +52,20 @@ public final class FileManager {
 		}
 	}
 
-	public void getDirectoryMap(InputStream socketInputStream, OutputStream socketOutputStream) {
-		
+	public void getDirectoryMap(OutputStream socketOutputStream) {
+
 		try {
 			ObjectOutputStream oos = new ObjectOutputStream(socketOutputStream);
-			Map<String, List<String[]>> directoryTree = mapDirectory(rootDirectory, 0, rootDirectory.getName());
-			oos.writeObject(directoryTree);
+			/*directoryTree.entrySet().forEach(e -> {
+	            System.out.print(e.getKey() + "=> [");
+	            e.getValue().forEach(a -> {
+	                for (String s: a) {
+	                    System.out.print(s);
+	                }
+	            });
+	            System.out.println("]");
+	        });*/
+			oos.writeObject(directoryMap);
 			oos.flush();
 			System.out.println("Mapa de directorios enviado.");
 		} catch (IOException e) {
@@ -64,29 +76,71 @@ public final class FileManager {
 	}
 
 
-	private Map<String, List<String[]>> mapDirectory(File file, int level, String parent) {
-		Map<String, List<String[]>> tree = new HashMap<>();
+	public synchronized Map<String, List<String[]>> mapDirectory(File file, int level, String parent) throws IOException {
 		if (level==0) {
+			System.out.printf("[%s] Mapeando directorios...\n", Thread.currentThread().getName());
 			List<String[]> rootList = new LinkedList<>();
 		    rootList.add(new String[] {rootDirectory.getName(), "r"});
-		    tree.put("ROOT", rootList);
+		    file.toPath().register(watchService, ENTRY_CREATE, ENTRY_DELETE);
+		    directoryMap.put("ROOT", rootList);
 		}
         try (DirectoryStream<Path> ds = Files.newDirectoryStream(file.toPath())) {
         	for (Path p: ds) {
-                String child = file.toPath().relativize(p).toString() + '?' + fileId++;
-                if (!tree.containsKey(parent)) {
-                    tree.put(parent, new LinkedList<>());
+                String child = file.toPath().relativize(p).toString() + '?' + fileId++ + ':' + p;
+                if (!directoryMap.containsKey(parent)) {
+					directoryMap.put(parent, new LinkedList<>());
                 }
-                tree.get(parent).add(new String[] { child, (p.toFile().isDirectory() ? ("d") : "f")});
+				directoryMap.get(parent).add(new String[] { child, (p.toFile().isDirectory() ? ("d") : "f")});
                 if(p.toFile().isDirectory()) {
-                    tree.putAll(mapDirectory(p.toFile(), level + 1, child));
+                	p.register(watchService, ENTRY_CREATE, ENTRY_DELETE);
+					directoryMap.putAll(mapDirectory(p.toFile(), level + 1, child));
                 }
             }
         } catch (IOException e) {
         	e.printStackTrace();
         }
-        return tree;
+        return directoryMap;
 	}
+
+	public synchronized Map<String, List<String[]>> applyChanges(File file, String event) {
+		for (Map.Entry<String, List<String[]>> entry: directoryMap.entrySet()) {
+			if (!entry.getKey().equals("ROOT")) {
+				String keyPath;
+				if (entry.getKey().equals(rootDirectory.getName())) {
+					keyPath = rootDirectory.getAbsolutePath();
+				} else {
+					keyPath = entry.getKey().substring(entry.getKey().indexOf(':') + 1);
+				}
+				if (event.equals(ENTRY_CREATE.name())) {
+					String newDirectoryName = file.getName() + '?' + fileId++ + ':' + file;
+					if (file.getParent().equals(keyPath)) {
+						directoryMap.get(entry.getKey()).add(new String[] { newDirectoryName, (file.isDirectory() ? ("d") : "f")});
+						if (file.isDirectory()) {
+							directoryMap.put(newDirectoryName, new LinkedList<>());
+						}
+						return directoryMap;
+					}
+				}
+				if (event.equals(ENTRY_DELETE.name())) {
+					if (file.toPath().toString().equals(keyPath)) {
+						directoryMap.remove(entry.getKey());
+						return directoryMap;
+					} else {
+						for (String[] directoryData: entry.getValue()) {
+							String valuePath = directoryData[0].substring(directoryData[0].indexOf(':') + 1);
+							if (valuePath.equals(file.toString())) {
+								entry.getValue().remove(directoryData);
+								return directoryMap;
+							}
+						}
+					}
+				}
+			}
+		}
+		return null;
+	}
+
+
 	
 	public void updateCurrentDirectory(InputStream socketInputStream) {
 		try {
@@ -154,6 +208,18 @@ public final class FileManager {
 			Path filePath = Path.of(rootDirectory + File.separator + dis.readUTF());
 			System.out.println("Eliminando archivo: " + filePath);
 		    Files.deleteIfExists(filePath);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+
+	public void deleteFolder(InputStream socketInputStream) {
+		try {
+			DataInputStream dis = new DataInputStream(socketInputStream);
+			Path filePath = Path.of(rootDirectory + File.separator + dis.readUTF());
+			System.out.println("Eliminando carpeta: " + filePath);
+			Files.deleteIfExists(filePath);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

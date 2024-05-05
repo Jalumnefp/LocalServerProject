@@ -1,6 +1,7 @@
 package es.jfp.LocalServerProject.server.enums;
 
 public enum ClientAction {
+	CLOSE_SESSION(-1),
 	REGISTER(01),
 	LOGIN(02),
 	LOGOFF(03),
