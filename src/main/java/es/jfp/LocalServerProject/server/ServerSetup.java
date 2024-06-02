@@ -43,7 +43,7 @@ public class ServerSetup implements Runnable {
 		System.out.printf("[%s] Configurando servidor\n", Thread.currentThread().getName());
 		boolean configurationSuccessful = configureServer();
 		if (configurationSuccessful) {
-			if (login()) {
+					if (login()) {
 				Server server = new Server(this.nogui, this.ipv4, this.port, this.rootStorage);
 				Thread serverThread = new Thread(server, "Server");
 				serverThread.start();

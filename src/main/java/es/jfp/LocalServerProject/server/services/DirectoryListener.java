@@ -11,8 +11,6 @@ import java.nio.file.*;
 import java.util.List;
 import java.util.Map;
 import java.util.function.BiConsumer;
-import java.util.function.Consumer;
-import java.util.function.Function;
 
 /**
  * Clase que se encarga de actualizar en tiempo real la estructura de directorios de todos los clientes del servidor
@@ -35,7 +33,7 @@ public class DirectoryListener implements Runnable {
     public DirectoryListener(File rootDirectory) throws IOException {
         this.rootDirectory = rootDirectory;
         this.fm = FileManager.getInstance(rootDirectory);
-        this.directorMap = fm.mapDirectory(rootDirectory, 0, rootDirectory.getName());
+        //fm.mapDirectory(rootDirectory, 0, rootDirectory.getName());
         this.watchService = fm.watchService;
     }
 
@@ -52,8 +50,20 @@ public class DirectoryListener implements Runnable {
                 System.out.printf("[%s] Cambio detectado [Event: %s, File: %s, Context: %s]\n",
                         Thread.currentThread().getName(), watchEvent.kind().name(), watchEvent.context(), context);
                 File contextFile = new File(context + File.separator + watchEvent.context());
-                //this.directorMap = fm.mapDirectory(rootDirectory, 0, rootDirectory.getName());
-                Map<String, List<String[]>> newDirectoryMap = fm.applyChanges(contextFile, watchEvent.kind().name());
+                System.out.println(contextFile);
+                fm.updateDirectoryMap();
+
+                /*fm.directoryMap.forEach((key, value) -> {
+                    System.out.print(key + "=> [");
+                    value.forEach(a -> {
+                        for (String s : a) {
+                            System.out.print(s + " ");
+                        }
+                    });
+                    System.out.println("]");
+                });*/
+
+                /*Map<String, List<String[]>> newDirectoryMap = fm.applyChanges(contextFile, watchEvent.kind().name());
 
                 if (newDirectoryMap != null) {
                     newDirectoryMap.forEach((key, value) -> {
@@ -67,7 +77,7 @@ public class DirectoryListener implements Runnable {
                     });
                 }
 
-                broadcastDirectoryMap();
+                broadcastDirectoryMap();*/
                 
             });
 
@@ -82,7 +92,7 @@ public class DirectoryListener implements Runnable {
      */
     private void broadcastDirectoryMap() {
         List<Socket> currentSockets = Server.getCurrentSockets();
-        System.err.println(currentSockets);
+        //System.err.println(currentSockets);
         currentSockets.forEach(socket -> {
             try {
                 ObjectOutputStream oos = new ObjectOutputStream(socket.getOutputStream());
@@ -110,7 +120,5 @@ public class DirectoryListener implements Runnable {
             key.reset();
         }
     }
-
-   
 
 }

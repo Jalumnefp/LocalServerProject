@@ -45,8 +45,9 @@ public class UserAuthenticator {
 		String query = "CREATE TABLE IF NOT EXISTS users ("
 				+ "id INTEGER PRIMARY KEY AUTOINCREMENT,"
 				+ "name VARCHAR(50) NOT NULL,"
-				+ "sha256_password VARCHAR(64)"
-				+ ");";
+				+ "sha256_password VARCHAR(64),"
+				+ "UNIQUE(name)"
+				+ ")";
 		try (PreparedStatement pstmt = connection.prepareStatement(query)) {
 			pstmt.executeUpdate();
 		} catch (SQLException e) {
@@ -63,14 +64,19 @@ public class UserAuthenticator {
 			pstmt.setString(2, password);
 			
 			int rowsInserted = pstmt.executeUpdate();
-			
-			return rowsInserted > 0;
+			boolean successful = rowsInserted > 0;
+
+			if (successful) {
+				System.out.println("Usuario insertado correctamente");
+			}
+
+			return successful;
 			
 		} catch (SQLException e) {
 			System.err.printf("[%s] Error al insertar el nuevo usuario: {name: %s, sha256_password: %s}: %s\n",
 					Thread.currentThread().getName(), username, password, e);
+			return false;
 		}
-		return false;
 	}
 	
 	private boolean verifyUser(String username, String password) {
@@ -83,29 +89,37 @@ public class UserAuthenticator {
 			ResultSet rs = pstmt.executeQuery();
 			if (rs.next()) {
 				int matches = rs.getInt("matches");
-				return matches > 0;
+				boolean successful = matches > 0;
+				if (successful) {
+					System.out.println("Usuario verificado");
+				}
+				return successful;
 			}
 			
 		} catch (SQLException e) {
 			System.err.printf("[%s] Error al verificar el usuario: {name: %s, sha256_password: %s}: %s\n",
 					Thread.currentThread().getName(), username, password, e);
+			return false;
 		}
 		return false;
 	}
-	
+
 	private String processUser(InputStream is, OutputStream os, BiFunction<String, String, Boolean> actionFunction) {
-		System.out.printf("[%s] Procesando usuario...", Thread.currentThread().getName());
+		System.out.printf("[%s] Procesando usuario...\n", Thread.currentThread().getName());
 		DataInputStream dis = new DataInputStream(is);
 		DataOutputStream dos = new DataOutputStream(os);
 		try {
 			String username = dis.readUTF();
 			String password = dis.readUTF();
-			dos.writeBoolean(actionFunction.apply(username, password));
-			return username;
+			boolean successfully = actionFunction.apply(username, password);
+			System.out.println("Proceso de usuario: " + successfully);
+			dos.writeBoolean(successfully);
+			dos.flush();
+			return successfully ? username : null;
 		} catch (IOException e) {
 			System.err.printf("[%s] Error al procesar el usuario: %s\n", Thread.currentThread().getName(), e);
+			return null;
 		}
-		return null;
 	}
 
 }

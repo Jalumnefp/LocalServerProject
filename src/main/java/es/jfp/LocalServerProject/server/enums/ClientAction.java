@@ -17,7 +17,7 @@ public enum ClientAction {
 	
 	private final int value;
 	
-	private ClientAction(int value) {
+	ClientAction(int value) {
 		this.value = value;
 	}
 	

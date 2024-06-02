@@ -8,8 +8,6 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
 
-import static es.jfp.LocalServerProject.server.enums.ClientAction.CLOSE_SESSION;
-
 public class ServerSession implements Runnable {
 	
 	
@@ -37,15 +35,16 @@ public class ServerSession implements Runnable {
 	@Override
 	public void run() {
 
-		System.out.printf("[%s] Sesión creada\n", Thread.currentThread().getName());
+		System.out.printf("[%s] [User=%s] Sesión creada\n", Thread.currentThread().getName(), user);
 
 		boolean sessionClosed = false;
 		while(!sessionClosed) {
+			System.out.printf("[%s] [User=%s] Esperando peticiones...\n", Thread.currentThread().getName(), user);
 			try {
 				ClientAction action = getClientAction();
 				sessionClosed = doClientAction(action);
 			} catch (IOException e) {
-				System.err.printf("[%s] Salida forzada.\n", Thread.currentThread().getName());
+				System.err.printf("[%s] [User=%s] Salida forzada.\n", Thread.currentThread().getName(), user);
 				Server.getCurrentSockets().remove(clientSocket);
 				break;
 			}
@@ -57,19 +56,27 @@ public class ServerSession implements Runnable {
 	
 	private boolean doClientAction(ClientAction action) {
 		switch (action) {
-			case READ_DIRECTORY -> fileManager.getDirectoryMap(os);
-			case CREATE_FOLDER -> fileManager.createFolder(is);
-			case UPLOAD_FILE -> fileManager.uploadFile(is);
-			case DELETE_FILE -> fileManager.deleteFile(is);
-			case DELETE_FOLDER -> fileManager.deleteFolder();
-			case DOWNLOAD_FILE -> fileManager.downloadFile(is, os);
-			case LOGIN -> this.user = userAuth.loginUser(is, os);
-			case LOGOFF -> this.user = null;
-			case REGISTER -> this.user = userAuth.registerUser(is, os);
-			case UPDATE_FILE -> fileManager.updateCurrentDirectory(null);
-			case UPDATE_FOLDER -> fileManager.updateCurrentDirectory(null);
-			case USER_EXISTS -> fileManager.updateCurrentDirectory(null);
-			case CLOSE_SESSION -> {
+			case READ_DIRECTORY: fileManager.getDirectoryMap(os, user); break;
+			case CREATE_FOLDER: fileManager.createFolder(is, user); break;
+			case UPLOAD_FILE:  fileManager.uploadFile(is); break;
+			case DELETE_FILE:  fileManager.deleteFile(is); break;
+			case DELETE_FOLDER:  fileManager.deleteFolder(is); break;
+			case DOWNLOAD_FILE:  fileManager.downloadFile(is, os); break;
+			case LOGIN: {
+				this.user = userAuth.loginUser(is, os);
+				System.out.printf("[%s] Usuario adueñado: %s\n", Thread.currentThread().getName(), user);
+				break;
+			}
+			case LOGOFF:  {
+				System.out.printf("[%s] Usuario abandonado: %s\n", Thread.currentThread().getName(), user);
+				this.user = null;
+				break;
+			}
+			case REGISTER:  this.user = userAuth.registerUser(is, os); break;
+			/*case UPDATE_FILE:  fileManager.updateCurrentDirectory(null); break;
+			case UPDATE_FOLDER:  fileManager.updateCurrentDirectory(null); break;
+			case USER_EXISTS:  fileManager.updateCurrentDirectory(null); break;*/
+			case CLOSE_SESSION:  {
 				return true;
 			}
 		}
@@ -78,9 +85,9 @@ public class ServerSession implements Runnable {
 	
 	private ClientAction getClientAction() throws IOException {
 		int code = is.read();
-		System.out.printf("[%s] Request code: %d", Thread.currentThread().getName(), code);
+		System.out.printf("[%s] [User=%s] Request code: %d\n", Thread.currentThread().getName(), user, code);
 		ClientAction action = ClientAction.getByCode(code);
-		System.out.printf("[%s] Acción solicitada: %s\n", Thread.currentThread().getName(), action);
+		System.out.printf("[%s] [User=%s] Acción solicitada: %s\n", Thread.currentThread().getName(), user, action);
 		return action;
 	}
 
