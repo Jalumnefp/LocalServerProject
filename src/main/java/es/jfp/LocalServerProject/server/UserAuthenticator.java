@@ -1,10 +1,12 @@
 package es.jfp.LocalServerProject.server;
 
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.sql.*;
 import java.util.function.BiFunction;
 
-public class UserAuthenticator {
+public final class UserAuthenticator {
 	
 	private static UserAuthenticator instance;
 	private Connection connection;
@@ -12,7 +14,8 @@ public class UserAuthenticator {
 	
 	private UserAuthenticator() {
 		try {
-			System.out.printf("[%s] Conectando a la base de datos...\n", Thread.currentThread().getName());
+			Server.writeConsole(String.format("[%s] Conectando a la base de datos...", Thread.currentThread().getName()));
+
 			Class.forName("org.sqlite.JDBC");
 			this.connection = DriverManager.getConnection("jdbc:sqlite:files/db/database.db");
 			createUsersTableIfNotExists();
@@ -21,6 +24,7 @@ public class UserAuthenticator {
 			e.printStackTrace();
 		}
 	}
+
 	
 	public static UserAuthenticator getInstance() {
 		synchronized (UserAuthenticator.class) {
@@ -41,7 +45,7 @@ public class UserAuthenticator {
 	}
 	
 	private void createUsersTableIfNotExists() {
-		System.out.printf("[%s] Comprobando tablas de la base de datos...\n", Thread.currentThread().getName());
+		Server.writeConsole(String.format("[%s] Comprobando tablas de la base de datos...", Thread.currentThread().getName()));
 		String query = "CREATE TABLE IF NOT EXISTS users ("
 				+ "id INTEGER PRIMARY KEY AUTOINCREMENT,"
 				+ "name VARCHAR(50) NOT NULL,"
@@ -57,7 +61,8 @@ public class UserAuthenticator {
 	}
 	
 	private boolean insertUser(String username, String password) {
-		System.out.printf("Insertando nuevo usuario: {name: %s, sha256_password: %s}\n", username, password);
+		Server.writeConsole(String.format("[%s] Insertando nuevo usuario: {name: %s, sha256_password: %s}",
+				Thread.currentThread().getName(), username, password));
 		String query = "INSERT INTO users(name, sha256_password) VALUES (?, ?)";
 		try (PreparedStatement pstmt = connection.prepareStatement(query)) {
 			pstmt.setString(1, username);
@@ -67,20 +72,21 @@ public class UserAuthenticator {
 			boolean successful = rowsInserted > 0;
 
 			if (successful) {
-				System.out.println("Usuario insertado correctamente");
+				Server.writeConsole("[UserAuthenticator] Usuario insertado correctamente");
 			}
 
 			return successful;
 			
 		} catch (SQLException e) {
-			System.err.printf("[%s] Error al insertar el nuevo usuario: {name: %s, sha256_password: %s}: %s\n",
-					Thread.currentThread().getName(), username, password, e);
+			Server.writeConsole(String.format("[%s] Error al insertar el nuevo usuario: {name: %s, sha256_password: %s}: %s\n",
+					Thread.currentThread().getName(), username, password, e));
 			return false;
 		}
 	}
 	
 	private boolean verifyUser(String username, String password) {
-		System.out.printf("Verificando nuevo usuario: {name: %s, sha256_password: %s}\n", username, password);
+		Server.writeConsole(String.format("[%s] Verificando nuevo usuario: {name: %s, sha256_password: %s}\n",
+				Thread.currentThread().getName(), username, password));
 		String query = "SELECT COUNT(*) AS matches FROM users WHERE name = ? AND sha256_password = ?";
 		try (PreparedStatement pstmt = connection.prepareStatement(query)) {
 			pstmt.setString(1, username);
@@ -91,33 +97,33 @@ public class UserAuthenticator {
 				int matches = rs.getInt("matches");
 				boolean successful = matches > 0;
 				if (successful) {
-					System.out.println("Usuario verificado");
+					Server.writeConsole("[UserAuthenticator] Usuario verificado");
 				}
 				return successful;
 			}
 			
 		} catch (SQLException e) {
-			System.err.printf("[%s] Error al verificar el usuario: {name: %s, sha256_password: %s}: %s\n",
-					Thread.currentThread().getName(), username, password, e);
+			Server.writeConsole(String.format("[%s] Error al verificar el usuario: {name: %s, sha256_password: %s}: %s\n",
+					Thread.currentThread().getName(), username, password, e));
 			return false;
 		}
 		return false;
 	}
 
 	private String processUser(InputStream is, OutputStream os, BiFunction<String, String, Boolean> actionFunction) {
-		System.out.printf("[%s] Procesando usuario...\n", Thread.currentThread().getName());
+		Server.writeConsole(String.format("[%s] Procesando usuario...\n", Thread.currentThread().getName()));
 		DataInputStream dis = new DataInputStream(is);
 		DataOutputStream dos = new DataOutputStream(os);
 		try {
 			String username = dis.readUTF();
 			String password = dis.readUTF();
 			boolean successfully = actionFunction.apply(username, password);
-			System.out.println("Proceso de usuario: " + successfully);
+			Server.writeConsole("[User Authenticator] Proceso de usuario: " + successfully);
 			dos.writeBoolean(successfully);
 			dos.flush();
 			return successfully ? username : null;
 		} catch (IOException e) {
-			System.err.printf("[%s] Error al procesar el usuario: %s\n", Thread.currentThread().getName(), e);
+			Server.writeConsole(String.format("[%s] Error al procesar el usuario: %s\n", Thread.currentThread().getName(), e));
 			return null;
 		}
 	}

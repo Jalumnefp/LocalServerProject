@@ -41,43 +41,18 @@ public class DirectoryListener implements Runnable {
     @Override
     public void run() {
 
-        System.out.printf("[%s] Escuchando directorio raíz [%s];%n", Thread.currentThread().getName(), rootDirectory.getName());
+        Server.writeConsole(String.format("[%s] Escuchando directorio raíz [%s]",
+                Thread.currentThread().getName(), rootDirectory.getName()));
 
         try {
 
             handleDirectoryListener((watchEvent, context) -> {
 
-                System.out.printf("[%s] Cambio detectado [Event: %s, File: %s, Context: %s]\n",
-                        Thread.currentThread().getName(), watchEvent.kind().name(), watchEvent.context(), context);
+                Server.writeConsole(String.format("[%s] Cambio detectado [Event: %s, File: %s, Context: %s]",
+                        Thread.currentThread().getName(), watchEvent.kind().name(), watchEvent.context(), context));
                 File contextFile = new File(context + File.separator + watchEvent.context());
                 System.out.println(contextFile);
                 fm.updateDirectoryMap();
-
-                /*fm.directoryMap.forEach((key, value) -> {
-                    System.out.print(key + "=> [");
-                    value.forEach(a -> {
-                        for (String s : a) {
-                            System.out.print(s + " ");
-                        }
-                    });
-                    System.out.println("]");
-                });*/
-
-                /*Map<String, List<String[]>> newDirectoryMap = fm.applyChanges(contextFile, watchEvent.kind().name());
-
-                if (newDirectoryMap != null) {
-                    newDirectoryMap.forEach((key, value) -> {
-                        System.out.print(key + "=> [");
-                        value.forEach(a -> {
-                            for (String s : a) {
-                                System.out.print(s + " ");
-                            }
-                        });
-                        System.out.println("]");
-                    });
-                }
-
-                broadcastDirectoryMap();*/
                 
             });
 

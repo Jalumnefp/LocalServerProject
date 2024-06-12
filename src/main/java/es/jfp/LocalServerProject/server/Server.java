@@ -6,6 +6,7 @@ import es.jfp.LocalServerProject.ui.server.ServerFrame;
 import javax.swing.*;
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -15,15 +16,14 @@ import java.util.List;
 public class Server implements Runnable {
 	
 	private static List<Socket> currentSockets = new ArrayList<>();
-	
-	private boolean nogui;
-	
+	private static boolean nogui;
 	private InetAddress ipv4;
 	private int port;
 	private File rootStorage;
-	
+	public static ServerFrame serverFrame;
+
 	public Server(boolean nogui, InetAddress ipv4, int port, File rootStorage) {
-		this.nogui = nogui;
+		Server.nogui = nogui;
 		this.ipv4 = ipv4;
 		this.port = port;
 		this.rootStorage = rootStorage;
@@ -32,11 +32,20 @@ public class Server implements Runnable {
 	@Override
 	public void run() {
 
-		System.out.printf("[%s] Inicializando servidor...%n", Thread.currentThread().getName());
+		if (!nogui) {
+			try {
+				System.out.println("[Server] Inicializando GUI");
+				SwingUtilities.invokeAndWait(() -> serverFrame = new ServerFrame());
+			} catch (InterruptedException | InvocationTargetException e) {
+				e.printStackTrace();
+			}
+		}
+
+		writeConsole(String.format("[%s] Inicializando servidor...", Thread.currentThread().getName()));
 		
 		initialize();
 		
-		System.out.printf("[%s] Escuchando clientes...%n", Thread.currentThread().getName());
+		writeConsole(String.format("[%s] Escuchando clientes...", Thread.currentThread().getName()));
 		
 		startListening();
 		
@@ -50,14 +59,7 @@ public class Server implements Runnable {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
-		if (!nogui) {
-			SwingUtilities.invokeLater(() -> {
-				new ServerFrame();
-			});
-		} else {
-			
-		}
+
 	}
 	
 	private void startListening() {
@@ -66,15 +68,15 @@ public class Server implements Runnable {
 			while (true) {
 				Socket socket = serverSocket.accept();
 
-				System.out.printf("[%s] Se ha conectado un cliente: %s\n",
-						Thread.currentThread().getName(), socket);
+				writeConsole(String.format("[%s] Se ha conectado un cliente: %s",
+						Thread.currentThread().getName(), socket));
 
 				currentSockets.add(socket);
 				ServerSession serverSession = new ServerSession(socket, rootStorage);
 				Thread sessionThread = new Thread(serverSession, "Session{" + socket + '}');
 				sessionThread.start();
 			}
-			
+
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -83,6 +85,13 @@ public class Server implements Runnable {
 	
 	public static List<Socket> getCurrentSockets() {
 		return Server.currentSockets;
+	}
+	public static void writeConsole(String message) {
+		if (nogui) {
+			System.out.println(message);
+		} else {
+			serverFrame.appendText(message);
+		}
 	}
 
 }

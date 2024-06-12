@@ -74,7 +74,7 @@ public class ConfigCLI {
 	private void saveConfiguration() {
 		FileManager fm = FileManager.getInstance();
 		String config = formatManager.getFormatedConfigData(ipv4, port, password, storagePath);
-		fm.writeFileBytes(Path.of("config.txt"), config.getBytes());
+		fm.writeFileBytes(Path.of("files/conf/config.txt"), config.getBytes());
 	}
 	
 	private String requestValue(String message, Pattern pattern) {

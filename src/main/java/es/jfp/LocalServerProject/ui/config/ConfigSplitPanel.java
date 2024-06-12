@@ -53,7 +53,7 @@ public class ConfigSplitPanel extends JSplitPane {
 		optionsList.setValueIsAdjusting(true);
 		optionsList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		optionsList.setModel(new AbstractListModel() {
-			String[] values = new String[] {"Inicio", "Red", "Autenticación", "Almacentamiento", "Guía"};
+			String[] values = new String[] {"Inicio", "Red", "Autenticación", "Almacentamiento"};
 			public int getSize() {
 				return values.length;
 			}

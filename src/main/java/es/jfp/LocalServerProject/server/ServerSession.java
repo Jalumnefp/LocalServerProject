@@ -35,23 +35,23 @@ public class ServerSession implements Runnable {
 	@Override
 	public void run() {
 
-		System.out.printf("[%s] [User=%s] Sesión creada\n", Thread.currentThread().getName(), user);
+		Server.writeConsole(String.format("[%s] [User=%s] Sesión creada", Thread.currentThread().getName(), user));
 
 		boolean sessionClosed = false;
 		while(!sessionClosed) {
-			System.out.printf("[%s] [User=%s] Esperando peticiones...\n", Thread.currentThread().getName(), user);
+			Server.writeConsole(String.format("[%s] [User=%s] Esperando peticiones...", Thread.currentThread().getName(), user));
 			try {
 				ClientAction action = getClientAction();
 				sessionClosed = doClientAction(action);
 			} catch (IOException e) {
-				System.err.printf("[%s] [User=%s] Salida forzada.\n", Thread.currentThread().getName(), user);
+				Server.writeConsole(String.format("[%s] [User=%s] Salida forzada.", Thread.currentThread().getName(), user));
 				Server.getCurrentSockets().remove(clientSocket);
 				break;
 			}
 		}
 
-		System.out.printf("[%s] Cerrando sessión...", Thread.currentThread().getName());
-		
+		Server.writeConsole(String.format("[%s] Cerrando sessión...", Thread.currentThread().getName()));
+
 	}
 	
 	private boolean doClientAction(ClientAction action) {
@@ -64,30 +64,31 @@ public class ServerSession implements Runnable {
 			case DOWNLOAD_FILE:  fileManager.downloadFile(is, os); break;
 			case LOGIN: {
 				this.user = userAuth.loginUser(is, os);
-				System.out.printf("[%s] Usuario adueñado: %s\n", Thread.currentThread().getName(), user);
+				Server.writeConsole(String.format("[%s] Usuario adueñado: %s", Thread.currentThread().getName(), user));
 				break;
 			}
 			case LOGOFF:  {
-				System.out.printf("[%s] Usuario abandonado: %s\n", Thread.currentThread().getName(), user);
+				Server.writeConsole(String.format("[%s] Usuario abandonado: %s", Thread.currentThread().getName(), user));
 				this.user = null;
 				break;
 			}
 			case REGISTER:  this.user = userAuth.registerUser(is, os); break;
-			/*case UPDATE_FILE:  fileManager.updateCurrentDirectory(null); break;
-			case UPDATE_FOLDER:  fileManager.updateCurrentDirectory(null); break;
-			case USER_EXISTS:  fileManager.updateCurrentDirectory(null); break;*/
 			case CLOSE_SESSION:  {
 				return true;
 			}
+			case PING: Server.writeConsole(String.format("[%s] [Usuario: %s] PING", Thread.currentThread().getName(), user));
+			default: Server.writeConsole(
+					String.format("[%s] [Usuario: %s] Ha solicitado una acción no registrada", Thread.currentThread().getName(), user)
+			);
 		}
 		return false;
 	}
 	
 	private ClientAction getClientAction() throws IOException {
 		int code = is.read();
-		System.out.printf("[%s] [User=%s] Request code: %d\n", Thread.currentThread().getName(), user, code);
+		Server.writeConsole(String.format("[%s] [User=%s] Request code: %d", Thread.currentThread().getName(), user, code));
 		ClientAction action = ClientAction.getByCode(code);
-		System.out.printf("[%s] [User=%s] Acción solicitada: %s\n", Thread.currentThread().getName(), user, action);
+		Server.writeConsole(String.format("[%s] [User=%s] Acción solicitada: %s", Thread.currentThread().getName(), user, action));
 		return action;
 	}
 

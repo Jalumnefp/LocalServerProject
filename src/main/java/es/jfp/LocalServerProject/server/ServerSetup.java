@@ -1,13 +1,13 @@
 package es.jfp.LocalServerProject.server;
 
 import java.io.File;
+import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Scanner;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -35,6 +35,8 @@ public class ServerSetup implements Runnable {
 		this.fileManager = FileManager.getInstance();
 		this.configFrame = new ConfigFrame();
 		this.configCLI = new ConfigCLI();
+
+		requiredFilesExists();
 	}
 	
 
@@ -43,16 +45,34 @@ public class ServerSetup implements Runnable {
 		System.out.printf("[%s] Configurando servidor\n", Thread.currentThread().getName());
 		boolean configurationSuccessful = configureServer();
 		if (configurationSuccessful) {
-					if (login()) {
+			if (login()) {
 				Server server = new Server(this.nogui, this.ipv4, this.port, this.rootStorage);
 				Thread serverThread = new Thread(server, "Server");
 				serverThread.start();
 			}
 		} else {
 			System.err.printf("[%s] Configuracion fallida\n", Thread.currentThread().getName());
-
 		}
 	}
+
+	private void requiredFilesExists() {
+		Arrays.asList(
+				Path.of("files/conf/config.txt"),
+				Path.of("files/db/database.db")
+		).forEach(this::createFileIfNotExists);
+	}
+
+	private void createFileIfNotExists(Path path) {
+		if (!Files.exists(path)) {
+			try {
+				Files.createDirectories(path.getParent());
+				Files.createFile(path);
+			} catch (IOException e) {
+				throw new RuntimeException(e);
+			}
+		}
+	}
+
 	
 	/**
 	 * Obtiene los datos de configuración, comprueba que sean correctos y los aplica.
@@ -149,7 +169,7 @@ public class ServerSetup implements Runnable {
 	 * */
 	private String getFormatedConfig() {
 		String config = "";
-		byte[] configBytes = fileManager.readFileBytes(Path.of("config.txt"));
+		byte[] configBytes = fileManager.readFileBytes(Path.of("files/conf/config.txt"));
 		if (configBytes != null) {
 			config = new String(configBytes, StandardCharsets.UTF_8);
 		}
