@@ -1,4 +1,4 @@
-IPV4=127.0.0.1
+IPV4=192.168.0.17
 PORT=4545
-PASSWORD=asdf
-ROOT_DIRECTORY=C:\Users\magik\OneDrive\Escritorio\MAIN
+PASSWORD=Passw0rd
+ROOT_DIRECTORY=C:\Users\magik\OneDrive\Escritorio\INICI

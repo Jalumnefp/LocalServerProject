@@ -198,7 +198,7 @@ public final class FileManager {
 			byte[] buffer = new byte[2048];
 			int bytes;
 			while ((bytes=socketInputStream.read(buffer))!=-1) {
-				if (bytes == 1 && buffer[0] == -1 || bytes < buffer.length) {
+				if (bytes == 1 && buffer[0] == -1) {
 					break;
 				}
 				os.write(buffer, 0, bytes);

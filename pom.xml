@@ -7,7 +7,7 @@
 
     <groupId>es.jfp</groupId>
     <artifactId>LocalServerProject</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>1.0.0</version>
 
 
     <name>LocalServerProject</name>
@@ -26,7 +26,7 @@
             <artifactId>commons-lang3</artifactId>
             <version>3.14.0</version>
         </dependency>
-
+        <!-- Repositori local -->
         <dependency>
             <groupId>es.jfp</groupId>
             <artifactId>CustomSerializableObjects</artifactId>
@@ -90,19 +90,6 @@
                     </execution>
                 </executions>
             </plugin>
-
-            <!-- <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-jar-plugin</artifactId>
-                <version>3.3.0</version>
-                <configuration>
-                    <archive>
-                        <manifest>
-                            <mainClass>es.jfp.LocalServerProject.App</mainClass>
-                        </manifest>
-                    </archive>
-                </configuration>
-            </plugin> -->
 
         </plugins>
     </build>

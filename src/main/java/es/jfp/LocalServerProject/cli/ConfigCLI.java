@@ -43,7 +43,7 @@ public class ConfigCLI {
 		String titleList = colorize("La ventana de configuración se abre en los siguientes casos", TEXT_COLOR(226));
 		String option1 = "Es la primera vez que enciendes el servidor y tienes que configurarlo";
 		String option2 = "El archivo config.txt ha sido dañado y el servidor necesita crearlo de nuevo";
-		String option3 = "Has decidido cambiar la configuración por voluntad propia";
+		String option3 = "Has decidido cambiar la configuración con el argumento 'configure'";
 		System.out.printf("%s%n%n%s%n\t%s%s%n\t%s%s%n\t%s%s%n%n%n", 
 				welcomeMessage, titleList, liArrow, option1, liArrow, option2, liArrow, option3);
 	}
